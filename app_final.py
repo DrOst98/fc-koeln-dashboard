@@ -204,7 +204,7 @@ gam_model = joblib.load("gam_model.pkl")
 
 @st.cache_data
 def load_mapping():
-    with open("category_mappings.json") as f:
+    with open("category_mappings_old.json") as f:
         return json.load(f)
 category_mappings = load_mapping()
 
@@ -526,15 +526,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 with st.expander("📈 Show Feature Importances"):
-    fig, ax = plt.subplots()
-    importances = model.feature_importances_
-    indices = np.argsort(importances)[::-1][:10]  # top 10
-    features = np.array(model.feature_names_in_)[indices]
+    st.image("Feature_Importances_SHAP.png", caption="Top Feature Importances", use_column_width=True)
 
-    ax.barh(features[::-1], importances[indices][::-1])
-    ax.set_title("Top 10 Feature Importances")
-    ax.set_xlabel("Importance")
-    st.pyplot(fig)
 
 # === Footer Section ===
 st.markdown("""
