@@ -316,10 +316,12 @@ with col1:
     transfer_age = st.slider("", 16, 40, 25, key="transfer_age")
 
     help_input("Position Group", "Select the player's position group. Important for tactical fit and team balance.")
-    position_group = st.selectbox("", valid_position_groups, key="position_group")
+    filtered_position_groups = [p for p in valid_position_groups if p.lower() != "other"]
+    position_group = st.selectbox("", filtered_position_groups, key="position_group")
 
     help_input("Main Position", "Select the player's main position. Important for tactical fit and team balance.")
-    main_position = st.selectbox("", position_group_to_main.get(position_group, []), key="main_position")
+    valid_main_pos = [p for p in position_group_to_main.get(position_group, []) if p.lower() != "other"]
+    main_position = st.selectbox("", valid_main_pos, key="main_position")
 
     help_input("Preferred Foot", "Select the player's preferred foot. Important for assessing shooting and passing capabilities.")
     foot = st.selectbox("", valid_feet, key="preferred_foot")
@@ -461,15 +463,15 @@ if predict_clicked:
         input_query = {
             #"height": height,
             "mainPosition": main_position,
-            #"positionGroup": position_group,
+            "positionGroup": position_group,
             #"foot": foot,
             "transferAge": transfer_age,
             "marketvalue_closest": market_value,
-            #"toTeam_marketValue": to_team_market_value,
-            #"fromTeam_marketValue": from_team_market_value,
+            "toTeam_marketValue": to_team_market_value,
+            "fromTeam_marketValue": from_team_market_value,
             "percentage_played_before": percentage_played_before,
             "scorer_before_grouped_category": scorer_raw,
-            #"clean_sheets_before": clean_sheets_before,  # Falls du das dynamisch brauchst, kannst du das noch einbauen
+            "clean_sheets_before": clean_sheets_before,  # Falls du das dynamisch brauchst, kannst du das noch einbauen
             #"value_age_product": transfer_age * market_value,
             #"value_per_age": market_value / transfer_age if transfer_age > 0 else 0,
             'from_competition_competition_area': from_area,
