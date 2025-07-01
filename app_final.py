@@ -198,6 +198,10 @@ def card_end():
 model = xgb.XGBRegressor()
 model.load_model("model2.json")
 
+
+# Load GAM metamodel
+gam_model = joblib.load("gam_model.pkl")
+
 @st.cache_data
 def load_mapping():
     with open("category_mappings.json") as f:
@@ -302,7 +306,7 @@ with col1:
 
     card_start("📊 Performance Details")
 
-    help_input("Playing % Before", "Percentage of games played in the last season. Important for assessing player fitness and reliability.")
+    help_input("Playing % Before", "Percentage of minutes played in the last season. Important for assessing player fitness and reliability.")
     percentage_played_before = st.slider("", 0.0, 100.0, 50.0, key="percentage_played_before")
 
     if position_group.lower() in ['defender', 'goalkeeper']:
@@ -328,7 +332,7 @@ with col2:
     help_input("To Team Market Value (€M)", "Market value of the team the player is transferring to. Important for assessing the player's new club's financial strength and quality.")
     to_team_market_value = st.number_input("", 0.0, 1000.0, 61.7, key="to_team_market_value")
 
-    help_input("From Area", "Select the geographical area of the team the player is transferring from. Important for assessing league strength and player adaptation.")
+    help_input("From Area", "Select the country of the team the player is transferring from. Important for assessing league strength and player adaptation.")
     from_area = st.selectbox("", valid_areas, index=valid_areas.index("Germany") if "Germany" in valid_areas else 0, key="from_area")
 
     help_input("From Level", "Select the competition level of the team the player is transferring from. Important for assessing league strength and player adaptation.")
@@ -412,7 +416,11 @@ def hex_to_rgba(hex_color, alpha=0.5):
 # Prediction
 if predict_clicked:
     with st.spinner("Running prediction..."):
-        pred = model.predict(input_df)[0]
+        # Original model prediction
+        xgb_pred = model.predict(input_df)  # returns an array
+        
+        # GAM metamodel prediction based on original model's output
+        final_pred = gam_model.predict(xgb_pred.reshape(-1, 1))
                 # ÄHNLICHKEITSBERECHNUNG
         input_query = {
             #"height": height,
@@ -441,7 +449,7 @@ if predict_clicked:
             features = list(input_data.keys())
             id_cols = ['playerId', 'playerName', 'mainPosition', "percentage_played", 'season']
 
-            # 👇 Neu: doppelte Spaltennamen vermeiden
+            # doppelte Spaltennamen vermeiden
             all_cols = list(dict.fromkeys(features + id_cols))
 
             df_subset = df[all_cols].dropna().copy()
@@ -452,7 +460,12 @@ if predict_clicked:
                 if col in input_data:
                     input_data[col] = str(input_data[col])
 
-            df_subset = df_subset[df_subset['mainPosition'] == input_data['mainPosition']].copy()
+            df_subset = df_subset[
+             (df_subset['mainPosition'] == input_data['mainPosition']) &
+             (df_subset['from_competition_competition_level'] == input_data['from_competition_competition_level']) &
+             (df_subset['to_competition_competition_level'] == input_data['to_competition_competition_level'])
+            ].copy()
+
             df_subset = df_subset.sort_values("season", ascending=False).drop_duplicates("playerId", keep="first").reset_index(drop=True)
 
             df_encoded = pd.get_dummies(df_subset[features])
@@ -470,16 +483,14 @@ if predict_clicked:
         similar_players = find_similar_players(input_query, reference_df)
 
 
-        if pred < 30:
-            msg, color, emoji = "Not Recommended", "#FF4B4B", "🚫"
-        elif pred < 50:
-            msg, color, emoji = "Uncertain", "#FFA500", "⚠️"  
-        elif pred < 65:
-            msg, color, emoji = "Good Transfer", "#90EE90", "✅"
-        elif pred < 80:
-            msg, color, emoji = "Very Good Transfer", "#32CD32", "💎"
+        if final_pred < 30:
+            msg, color = "Not Recommended", "#FF4B4B"
+        elif final_pred < 50:
+            msg, color = "Expected to Be a Substitute", "#FFA500"
+        elif final_pred < 75:
+            msg, color = "Expected to Be a Rotation Player", "#32CD32"
         else:
-            msg, color, emoji = "Key Player", "#008000", "🌟"
+            msg, color = "Expected to Be a Key Player", "#008000"
 
         rgba_bg = hex_to_rgba(color, alpha=0.6)  # 0.6 ist die Transparenz
 
@@ -496,7 +507,7 @@ if predict_clicked:
                 letter-spacing: 0.5px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);'>
                 <span style='color: white; font-size: 1.3rem; font-weight: 600;'>
-                    {emoji} {msg} – Expected Playing Time: <strong>{pred:.2f}%</strong>
+                    {msg} – Expected Playing Time: <strong>{final_pred[0]:.2f}%</strong>
                 </span>
             </div>
             """, unsafe_allow_html=True)
