@@ -63,6 +63,16 @@ position_group_display_map = {
 # Rück-Mapping für Verarbeitung
 position_group_reverse_map = {v: k for k, v in position_group_display_map.items()}
 
+#Mapping for foot
+foot_display_map = {
+    "left": "Left Foot",
+    "right": "Right Foot",
+    "both": "Both Feet",
+    "unknown": "Unknown Foot",
+}
+# Rück-Mapping für Verarbeitung
+foot_reverse_map = {v: k for k, v in foot_display_map.items()}
+
 # === Page Configuration ===
 st.set_page_config(
     page_title="1. FC Köln Transfer Dashboard",
@@ -382,7 +392,9 @@ with col1:
     main_position = main_position_reverse_map.get(selected_main_pos_display, selected_main_pos_display)
 
     help_input("Preferred Foot", "Select the player's preferred foot. Important for assessing shooting and passing capabilities.")
-    foot = st.selectbox("", valid_feet, key="preferred_foot")
+    foot_display = [foot_display_map.get(f, f.title()) for f in valid_feet]
+    selected_foot_display = st.selectbox("", foot_display, key="foot")
+    foot = foot_reverse_map.get(selected_foot_display, selected_foot_display)
 
     help_input("Player Market Value (€M)", "Estimated market value of the player in millions of euros. Important for assessing transfer budget and player quality.")
     market_value = st.number_input("", 0.0, 200.0, 15.0, key="market_value")
