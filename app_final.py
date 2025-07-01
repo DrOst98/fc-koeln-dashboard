@@ -204,7 +204,7 @@ gam_model = joblib.load("gam_model.pkl")
 
 @st.cache_data
 def load_mapping():
-    with open("category_mappings.json") as f:
+    with open("category_mappings_old.json") as f:
         return json.load(f)
 category_mappings = load_mapping()
 
