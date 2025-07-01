@@ -68,7 +68,7 @@ foot_display_map = {
     "left": "Left Foot",
     "right": "Right Foot",
     "both": "Both Feet",
-    "unknown": "Unknown Foot",
+    #"unknown": "Unknown Foot",
 }
 # Rück-Mapping für Verarbeitung
 foot_reverse_map = {v: k for k, v in foot_display_map.items()}
@@ -392,7 +392,8 @@ with col1:
     main_position = main_position_reverse_map.get(selected_main_pos_display, selected_main_pos_display)
 
     help_input("Preferred Foot", "Select the player's preferred foot. Important for assessing shooting and passing capabilities.")
-    foot_display = [foot_display_map.get(f, f.title()) for f in valid_feet]
+    filtered_feet = [f for f in valid_feet if f.lower() != "unknown"]
+    foot_display = [foot_display_map.get(f, f.title()) for f in filtered_feet]
     selected_foot_display = st.selectbox("", foot_display, key="foot")
     foot = foot_reverse_map.get(selected_foot_display, selected_foot_display)
 
