@@ -113,7 +113,7 @@ set_bg_image_with_overlay(stadium_background)
 ##Loading Dataset
 @st.cache_data
 def load_player_reference_data():
-    return pd.read_csv("final_dataset.csv")
+    return pd.read_csv("df.csv")
 
 reference_df = load_player_reference_data()
 
@@ -204,7 +204,7 @@ gam_model = joblib.load("gam_model.pkl")
 
 @st.cache_data
 def load_mapping():
-    with open("category_mappings_old.json") as f:
+    with open("category_mappings.json") as f:
         return json.load(f)
 category_mappings = load_mapping()
 
@@ -526,7 +526,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 with st.expander("📈 Show Feature Importances"):
-    st.image("Feature_Importances_SHAP.png", caption="Top Feature Importances", use_column_width=True)
+    st.image("Feature_Importances_SHAP.png", caption="Top Feature Importances", use_container_width=True)
 
 
 # === Footer Section ===
