@@ -33,6 +33,35 @@ def sort_grouped_labels(labels):
 
     return sorted(labels, key=extract_lower_bound)
 
+#mapping positions
+main_position_display_map = {
+    "rightwing": "Right Winger",
+    "leftwing": "Left Winger",
+    "attackingmidfield": "Attacking Midfielder",
+    "centralmidfield": "Central Midfielder",
+    "defensivemidfield": "Defensive Midfielder",
+    "centerback": "Center Back",
+    "leftback": "Left Back",
+    "rightback": "Right Back",
+    "goalkeeper": "Goalkeeper",
+    "leftmidfield": "Left Midfielder",
+    "rightmidfield": "Right Midfielder",
+    "centerforward": "Center Forward",
+}
+
+# Rück-Mapping für Verarbeitung
+main_position_reverse_map = {v: k for k, v in main_position_display_map.items()}
+
+
+#Mapping mit positionGroup
+position_group_display_map = {
+    "defender": "Defender",
+    "goalkeeper": "Goalkeeper",
+    "midfielder": "Midfielder",
+    "attacker": "Attacker",
+}
+# Rück-Mapping für Verarbeitung
+position_group_reverse_map = {v: k for k, v in position_group_display_map.items()}
 
 # === Page Configuration ===
 st.set_page_config(
@@ -332,7 +361,7 @@ def help_input(label, tooltip_text):
 col1, col2 = st.columns(2)
 
 with col1:
-    card_start("🧍 Player Profile")
+    card_start("Player Profile")
 
     help_input("Height (cm)", "Enter the player's height in centimeters. Taller players may perform better in aerial duels.")
     height = st.slider("", 150, 220, 180, key="height")
@@ -340,13 +369,17 @@ with col1:
     help_input("Transfer Age", "Enter the player's age at the time of transfer. Important for assessing player development and experience.")
     transfer_age = st.slider("", 16, 40, 25, key="transfer_age")
 
-    help_input("Position Group", "Select the player's position group. Important for tactical fit and team balance.")
+    help_input("Position Group", "Select the player's position group. Important for tactical fit and team balance.")  
     filtered_position_groups = [p for p in valid_position_groups if p.lower() != "other"]
-    position_group = st.selectbox("", filtered_position_groups, key="position_group")
+    posgroup_display = [position_group_display_map.get(p, p.title()) for p in filtered_position_groups]
+    selected_posgroup_display = st.selectbox("", posgroup_display, key="position_group")
+    position_group = position_group_reverse_map.get(selected_posgroup_display, selected_posgroup_display)
 
     help_input("Main Position", "Select the player's main position. Important for tactical fit and team balance.")
     valid_main_pos = [p for p in position_group_to_main.get(position_group, []) if p.lower() != "other"]
-    main_position = st.selectbox("", valid_main_pos, key="main_position")
+    main_pos_display = [main_position_display_map.get(p, p) for p in valid_main_pos]
+    selected_main_pos_display = st.selectbox("", main_pos_display, key="main_position")
+    main_position = main_position_reverse_map.get(selected_main_pos_display, selected_main_pos_display)
 
     help_input("Preferred Foot", "Select the player's preferred foot. Important for assessing shooting and passing capabilities.")
     foot = st.selectbox("", valid_feet, key="preferred_foot")
@@ -356,7 +389,7 @@ with col1:
 
     card_end()
 
-    card_start("📊 Performance Details")
+    card_start("Performance Details")
 
     help_input("Playing % Before", "Percentage of minutes played in the last season. Important for assessing player fitness and reliability.")
     percentage_played_before = st.slider("", 0.0, 100.0, 50.0, key="percentage_played_before")
@@ -387,7 +420,7 @@ with col1:
     card_end()
 
 with col2:
-    card_start("🔄 Transfer Details")
+    card_start("Transfer Details")
 
     help_input("From Team Market Value (€M)", "Market value of the team the player is transferring from. Important for assessing the player's previous club's financial strength and quality.")
     from_team_market_value = st.number_input("", 0.0, 1000.0, 61.7, key="from_team_market_value")
@@ -413,7 +446,7 @@ with col2:
 
     card_end()
 
-    with st.expander("⚙️ Further Transfer Details"):
+    with st.expander("Further Transfer Details"):
         help_input("Loan Transfer", "Check if the transfer is a loan. Important for assessing player commitment and future prospects.")
         isLoan = st.checkbox("Loan Transfer", key="is_loan")
 
