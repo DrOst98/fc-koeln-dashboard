@@ -9,6 +9,31 @@ import xgboost as xgb
 from sklearn.preprocessing import StandardScaler
 from scipy.spatial.distance import cdist
 
+# Mappings für bessere Anzeige in Dropdowns
+label_mapping = {
+    "other": {
+        "scorer_before_grouped_category": "20+",
+        "clean_sheets_before_grouped": "15+"
+    }
+}
+
+# Umkehr-Mapping für spätere Rückkonvertierung
+reverse_mapping = {
+    "20+": "other",
+    "15+": "other"
+}
+
+def sort_grouped_labels(labels):
+    def extract_lower_bound(label):
+        if "+" in label:
+            return int(label.replace("+", ""))
+        if "-" in label:
+            return int(label.split("-")[0])
+        return 999  # fallback for unexpected format
+
+    return sorted(labels, key=extract_lower_bound)
+
+
 # === Page Configuration ===
 st.set_page_config(
     page_title="1. FC Köln Transfer Dashboard",
@@ -316,10 +341,21 @@ with col1:
         help_input("Scorer Value (Goals + Assists)", "Total goals and assists scored by the player in the last season. Important for forwards and midfielders.")
         # Ohne "defender/goalkeeper" in der Auswahl
         scorer_options = [g for g in valid_scorer_groups if g != "defender/goalkeeper"]
-        scorer_raw = st.selectbox("", scorer_options, key="scorer")
+        scorer_mapped = [label_mapping["other"]["scorer_before_grouped_category"] if g == "other" else g for g in scorer_options]
+        scorer_sorted = sort_grouped_labels(scorer_mapped)
+        selected_scorer_display = st.selectbox("", scorer_sorted, key="scorer")
+        scorer_raw = reverse_mapping.get(selected_scorer_display, selected_scorer_display)
+
+
+
 
     help_input("Clean Sheets", "Number of clean sheets kept by the player in the last season. Important for goalkeepers and defenders.")
-    clean_sheets_before = st.selectbox("", valid_clean_sheets, key="clean_sheets")
+    cs_mapped = [label_mapping["other"]["clean_sheets_before_grouped"] if val == "other" else val for val in valid_clean_sheets]
+    cs_sorted = sort_grouped_labels(cs_mapped)
+    selected_cs_display = st.selectbox("", cs_sorted, key="clean_sheets")
+    clean_sheets_before = reverse_mapping.get(selected_cs_display, selected_cs_display)
+
+
 
     card_end()
 
