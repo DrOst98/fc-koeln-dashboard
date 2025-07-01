@@ -215,8 +215,8 @@ valid_to_areas = category_mappings["to_competition_competition_area"]
 valid_position_groups = category_mappings["positionGroup"]
 valid_main_positions = category_mappings["mainPosition"]
 valid_feet = category_mappings["foot"]
-valid_clean_sheets = category_mappings.get("clean_sheets_before_grouped")#, ["0-1", "2-4", "5-9", "10-14", "15+"])
-valid_scorer_groups = category_mappings.get("scorer_before_grouped_category")#, ["defender/goalkeeper", "0-3", "4-6", "7-10", "11-15", "16-20", "21-30", "30+"])
+valid_clean_sheets = category_mappings.get("clean_sheets_before_grouped", ["0-2", "2-5", "5-10", "10-15", "other"])
+valid_scorer_groups = category_mappings.get("scorer_before_grouped_category", ["defender/goalkeeper", "0-3", "3-6", "6-10", "10-15", "15-20", "other"])
 # Dynamic mapping from real data
 position_group_to_main = pd.read_csv("xgboost_predictions_test.csv").groupby("positionGroup")["mainPosition"].unique().apply(list).to_dict()
 
