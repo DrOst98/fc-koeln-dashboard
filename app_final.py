@@ -179,30 +179,55 @@ st.markdown("""
 
 
 # === HEADER SECTION WITH LOGOS AND TITLE ===
-col_fc, col_title, col_uni = st.columns([2, 6, 2])
+fc_logo = base64.b64encode(open(logo_fc, "rb").read()).decode()
+uni_logo = base64.b64encode(open(logo_uni, "rb").read()).decode()
 
-with col_title:
-    st.markdown("""
-        <h1 style='text-align: center; margin-bottom: 0.3rem;'>1. FC Köln Transfer Success Predictor</h1>
-        <p style='text-align: center; color: white; font-size: 0.9rem;'>
-            Developed in cooperation with the University of Cologne – estimate expected playing percentage for potential transfers.
-        </p>
-    """, unsafe_allow_html=True)
+st.markdown(f"""
+<style>
+.responsive-header {{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    text-align: center;
+    margin-bottom: 1rem;
+}}
 
-with col_fc:
-    st.markdown("<div style='margin-top: 1.5rem;'>", unsafe_allow_html=True)
-    st.image(logo_fc, width=90)
-    st.markdown("</div>", unsafe_allow_html=True)
+.responsive-header img {{
+    max-height: 80px;
+    width: auto;
+    margin: 0.5rem;
+}}
 
-with col_uni:
-    st.markdown(
-        f"""
-        <div style='text-align: right;'>
-            <img src="data:image/png;base64,{base64.b64encode(open(logo_uni, "rb").read()).decode()}" width="150">
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+.responsive-header .title {{
+    flex-grow: 1;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0.5rem 1rem;
+}}
+
+@media screen and (max-width: 768px) {{
+    .responsive-header {{
+        flex-direction: column;
+    }}
+    .responsive-header .title {{
+        font-size: 1.3rem;
+    }}
+}}
+</style>
+
+<div class="responsive-header">
+    <img src="data:image/png;base64,{fc_logo}" alt="FC Köln Logo">
+    <div class="title">
+        1. FC Köln Transfer Success Predictor<br>
+        <span style="font-weight: 400; font-size: 0.9rem;">Developed with University of Cologne</span>
+    </div>
+    <img src="data:image/png;base64,{uni_logo}" alt="Uni Logo">
+</div>
+""", unsafe_allow_html=True)
+
 
 # === CARD STYLE HELPER ===
 def card_start(title):
