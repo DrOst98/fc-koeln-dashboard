@@ -19,8 +19,8 @@ label_mapping = {
 
 # Umkehr-Mapping für spätere Rückkonvertierung
 reverse_mapping = {
-    "20+": "other",
-    "15+": "other"
+    "20+": "15-20",
+    "15+": "10-15"
 }
 
 def sort_grouped_labels(labels):
