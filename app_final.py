@@ -599,12 +599,12 @@ if predict_clicked:
 
 
         if final_pred < 20:
-            msg, color = "Not Recommended", "#FF4B4B"
+            msg, color = "Not expected to play", "#FF4B4B"
         elif final_pred < 40:
             msg, color = "Expected to Be a Substitute", "#FFA500"
         elif final_pred < 60:
             msg, color = "Expected to Be a Rotation Player", "#32CD32"
-        elif:
+        elif final_pred < 90:
             msg, color = "Expected to Be a Key Player", "#008000"
         else: 
             msg, color = "Next Starplayer", "#015801"
