@@ -435,11 +435,17 @@ with col1:
 with col2:
     card_start("Transfer Details")
 
+    # From Team Market Value in €M (Eingabe)
     help_input("From Team Market Value (€M)", "Market value of the team the player is transferring from. Important for assessing the player's previous club's financial strength and quality.")
-    from_team_market_value = st.number_input("", 0.0, 1000.0, 61.7, key="from_team_market_value")
+    from_team_market_value_million = st.number_input("", 0.0, 1400.0, 61.7, key="from_team_market_value")
 
+    # To Team Market Value in €M (Eingabe)
     help_input("To Team Market Value (€M)", "Market value of the team the player is transferring to. Important for assessing the player's new club's financial strength and quality.")
-    to_team_market_value = st.number_input("", 0.0, 1000.0, 61.7, key="to_team_market_value")
+    to_team_market_value_million = st.number_input("", 0.0, 1400.0, 61.7, key="to_team_market_value")
+
+    # Intern umrechnen auf Euro für das Modell
+    from_team_market_value = from_team_market_value_million * 1_000_000
+    to_team_market_value = to_team_market_value_million * 1_000_000
 
     help_input("From Area", "Select the country of the team the player is transferring from. Important for assessing league strength and player adaptation.")
     from_area = st.selectbox("", valid_areas, index=valid_areas.index("Germany") if "Germany" in valid_areas else 0, key="from_area")
