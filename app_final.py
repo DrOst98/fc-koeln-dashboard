@@ -598,14 +598,16 @@ if predict_clicked:
         similar_players = find_similar_players(input_query, reference_df)
 
 
-        if final_pred < 30:
+        if final_pred < 20:
             msg, color = "Not Recommended", "#FF4B4B"
-        elif final_pred < 50:
+        elif final_pred < 40:
             msg, color = "Expected to Be a Substitute", "#FFA500"
-        elif final_pred < 75:
+        elif final_pred < 60:
             msg, color = "Expected to Be a Rotation Player", "#32CD32"
-        else:
+        elif:
             msg, color = "Expected to Be a Key Player", "#008000"
+        else: 
+            msg, color = "Next Starplayer", "#015801"
 
         rgba_bg = hex_to_rgba(color, alpha=0.6)  # 0.6 ist die Transparenz
 
