@@ -1,15 +1,16 @@
-from pyexpat import features
-import streamlit as st
-import pandas as pd
-import joblib
-import base64
-import json
-from pathlib import Path
-import xgboost as xgb
-from sklearn.preprocessing import StandardScaler
-from scipy.spatial.distance import cdist
+# === Imports ===
+from pyexpat import features  # Unused XML parser import
+import streamlit as st  # Streamlit for web UI
+import pandas as pd  # Data handling
+import joblib  # Load serialized models
+import base64  # Encode images
+import json  # Read JSON files
+from pathlib import Path  # File paths
+import xgboost as xgb  # XGBoost model
+from sklearn.preprocessing import StandardScaler  # Scaling for similarity
+from scipy.spatial.distance import cdist  # Distance for player similarity
 
-# Mappings für bessere Anzeige in Dropdowns
+# === Category display mapping ===
 label_mapping = {
     "other": {
         "scorer_before_grouped_category": "20+",
@@ -17,12 +18,14 @@ label_mapping = {
     }
 }
 
-# Umkehr-Mapping für spätere Rückkonvertierung
+# Reverse mapping for labels
 reverse_mapping = {
     "20+": "15-20",
     "15+": "10-15"
 }
 
+
+# Sort grouped labels based on numeric values
 def sort_grouped_labels(labels):
     def extract_lower_bound(label):
         if "+" in label:
@@ -33,7 +36,8 @@ def sort_grouped_labels(labels):
 
     return sorted(labels, key=extract_lower_bound)
 
-#mapping positions
+
+# Mapping of internal to readable main positions
 main_position_display_map = {
     "rightwing": "Right Winger",
     "leftwing": "Left Winger",
@@ -49,28 +53,29 @@ main_position_display_map = {
     "centerforward": "Center Forward",
 }
 
-# Rück-Mapping für Verarbeitung
+# Reverse mapping for main positions
 main_position_reverse_map = {v: k for k, v in main_position_display_map.items()}
 
 
-#Mapping mit positionGroup
+# Display mapping for position groups
 position_group_display_map = {
     "defender": "Defender",
     "goalkeeper": "Goalkeeper",
     "midfielder": "Midfielder",
     "attacker": "Attacker",
 }
-# Rück-Mapping für Verarbeitung
+
+# Reverse mapping for position groups
 position_group_reverse_map = {v: k for k, v in position_group_display_map.items()}
 
-#Mapping for foot
+# Display mapping for preferred foot
 foot_display_map = {
     "left": "Left Foot",
     "right": "Right Foot",
     "both": "Both Feet",
-    #"unknown": "Unknown Foot",
 }
-# Rück-Mapping für Verarbeitung
+
+# Reverse mapping for preferred foot
 foot_reverse_map = {v: k for k, v in foot_display_map.items()}
 
 # === Page Configuration ===
@@ -118,10 +123,14 @@ st.markdown(
 )
 
 # === BACKGROUND FUNCTION WITH OVERLAY ===
+
+# Define background and logo paths
 stadium_background = "stadium.jpg"
 logo_fc = "1-fc-koln-logo-png_seeklogo-266469.png"
 logo_uni = "Uni_blau2.png"
 
+
+# Set background image with dark overlay
 def set_bg_image_with_overlay(image_path):
     with open(image_path, "rb") as img_file:
         img_base64 = base64.b64encode(img_file.read()).decode()
@@ -170,15 +179,13 @@ def set_bg_image_with_overlay(image_path):
     unsafe_allow_html=True
 )
 
-# === BACKGROUND INIT ===
+# Apply background
 set_bg_image_with_overlay(stadium_background)
 
-
-##Loading Dataset
+# Load player reference dataset
 @st.cache_data
 def load_player_reference_data():
     return pd.read_csv("df.csv")
-
 reference_df = load_player_reference_data()
 
 
@@ -218,9 +225,12 @@ st.markdown("""
 
 
 # === HEADER SECTION WITH LOGOS AND TITLE ===
+
+# Encode logos for header
 fc_logo = base64.b64encode(open(logo_fc, "rb").read()).decode()
 uni_logo = base64.b64encode(open(logo_uni, "rb").read()).decode()
 
+# Render header with logos
 st.markdown(f"""
 <style>
 .responsive-header {{
@@ -269,6 +279,8 @@ st.markdown(f"""
 
 
 # === CARD STYLE HELPER ===
+
+# Start custom card block
 def card_start(title):
     st.markdown(f"""
     <div style="background-color: rgba(255, 255, 255, 0.08); 
@@ -279,6 +291,7 @@ def card_start(title):
     <h4 style="color: white;">{title}</h4>
     """, unsafe_allow_html=True)
 
+# End custom card block
 def card_end():
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -288,9 +301,10 @@ model = xgb.XGBRegressor()
 model.load_model("model2.json")
 
 
-# Load GAM metamodel
+# Load GAM model
 gam_model = joblib.load("gam_model.pkl")
 
+# Load category mappings
 @st.cache_data
 def load_mapping():
     with open("category_mappings.json") as f:
@@ -298,7 +312,7 @@ def load_mapping():
 category_mappings = load_mapping()
 
 
-
+# Assign valid categories from mappings
 valid_areas = category_mappings["from_competition_competition_area"]
 valid_to_areas = category_mappings["to_competition_competition_area"]
 valid_position_groups = category_mappings["positionGroup"]
@@ -306,9 +320,12 @@ valid_main_positions = category_mappings["mainPosition"]
 valid_feet = category_mappings["foot"]
 valid_clean_sheets = category_mappings.get("clean_sheets_before_grouped", ["0-2", "2-5", "5-10", "10-15", "other"])
 valid_scorer_groups = category_mappings.get("scorer_before_grouped_category", ["defender/goalkeeper", "0-3", "3-6", "6-10", "10-15", "15-20", "other"])
-# Dynamic mapping from real data
+
+# Mapping positionGroup → mainPosition
 position_group_to_main = pd.read_csv("xgboost_predictions_test.csv").groupby("positionGroup")["mainPosition"].unique().apply(list).to_dict()
 
+
+# League level per area
 area_to_levels = {
     'Austria': [1, 2], 'Belgium': [1, 2], 'Bosnia-Herzegovina': [1], 'Bulgaria': [1], 'Canada': [1],
     'Croatia': [1, 2], 'Czech Republic': [1], 'Denmark': [1, 2], 'England': [1, 2, 3, 4], 'Estonia': [1],
@@ -324,6 +341,7 @@ area_to_levels = {
 
 # === Inputs ===
 
+# Function to create label + tooltip
 def help_input(label, tooltip_text):
     st.markdown(f"""
     <style>
@@ -367,12 +385,14 @@ def help_input(label, tooltip_text):
     """, unsafe_allow_html=True)
 
 
-
+# Layout: two input columns
 col1, col2 = st.columns(2)
 
+# Input fields in left column
 with col1:
     card_start("Player Profile")
 
+    # Slider and dropdowns: height, age, position group, main position, foot, market value
     help_input("Height (cm)", "Enter the player's height in centimeters. Taller players may perform better in aerial duels.")
     height = st.slider("", 150, 220, 180, key="height")
 
@@ -402,8 +422,10 @@ with col1:
 
     card_end()
 
+
     card_start("Performance Details")
 
+    # Playing %, scorer group, clean sheets
     help_input("Playing % Before", "Percentage of minutes played in the last season. Important for assessing player fitness and reliability.")
     percentage_played_before = st.slider("", 0.0, 100.0, 50.0, key="percentage_played_before")
 
@@ -412,15 +434,12 @@ with col1:
         st.markdown("**Scorer (Goals + Assists):** Automatically ignored for defenders and goalkeepers")
     else:
         help_input("Scorer Value (Goals + Assists)", "Total goals and assists scored by the player in the last season. Important for forwards and midfielders.")
-        # Ohne "defender/goalkeeper" in der Auswahl
+        # without "defender/goalkeeper" 
         scorer_options = [g for g in valid_scorer_groups if g != "defender/goalkeeper"]
         scorer_mapped = [label_mapping["other"]["scorer_before_grouped_category"] if g == "other" else g for g in scorer_options]
         scorer_sorted = sort_grouped_labels(scorer_mapped)
         selected_scorer_display = st.selectbox("", scorer_sorted, key="scorer")
         scorer_raw = reverse_mapping.get(selected_scorer_display, selected_scorer_display)
-
-
-
 
     help_input("Clean Sheets", "Number of clean sheets kept by the player in the last season. Important for goalkeepers and defenders.")
     cs_mapped = [label_mapping["other"]["clean_sheets_before_grouped"] if val == "other" else val for val in valid_clean_sheets]
@@ -435,15 +454,15 @@ with col1:
 with col2:
     card_start("Transfer Details")
 
-    # From Team Market Value in €M (Eingabe)
+    # From Team Market Value in €M 
     help_input("From Team Market Value (€M)", "Market value of the team the player is transferring from. Important for assessing the player's previous club's financial strength and quality.")
     from_team_market_value_million = st.number_input("", 0.0, 1400.0, 61.7, key="from_team_market_value")
 
-    # To Team Market Value in €M (Eingabe)
+    # To Team Market Value in €M 
     help_input("To Team Market Value (€M)", "Market value of the team the player is transferring to. Important for assessing the player's new club's financial strength and quality.")
     to_team_market_value_million = st.number_input("", 0.0, 1400.0, 61.7, key="to_team_market_value")
 
-    # Intern umrechnen auf Euro für das Modell
+    # recalculating in Euro
     from_team_market_value = from_team_market_value_million * 1_000_000
     to_team_market_value = to_team_market_value_million * 1_000_000
 
@@ -465,6 +484,7 @@ with col2:
 
     card_end()
 
+    # Additional checkboxes (loan, joker)
     with st.expander("Further Transfer Details"):
         help_input("Loan Transfer", "Check if the transfer is a loan. Important for assessing player commitment and future prospects.")
         isLoan = st.checkbox("Loan Transfer", key="is_loan")
@@ -477,8 +497,10 @@ with col2:
 
 
 # === Foreign Transfer Logic ===
+# Detect if transfer is international
 foreign_transfer = int((from_area != to_area))
 
+# === Prepare input dictionary for model ===
 
 data = {col: 0 for col in model.feature_names_in_}
 data.update({
@@ -506,29 +528,31 @@ data.update({
     'team_market_value_relation': to_team_market_value / from_team_market_value if from_team_market_value > 0 else 0
 })
 
-
+# Convert to DataFrame
 input_df = pd.DataFrame([data])
 
-# Category typing
+# Cast to categorical types
 for col, cats in category_mappings.items():
     if col in input_df.columns:
         input_df[col] = pd.Categorical(input_df[col], categories=cats)
 
 
 # === ACTION BUTTONS & OUTPUT ===
+
+# Layout for predict button and result
 col_l, col_m = st.columns([1, 6])
 
 with col_l:
     predict_clicked = st.button("🔮 Predict")
    
 
-# Hilfsfunktion, um HEX → RGBA umzuwandeln
+# Convert hex color to RGBA
 def hex_to_rgba(hex_color, alpha=0.5):
     hex_color = hex_color.lstrip("#")
     r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
     return f"rgba({r}, {g}, {b}, {alpha})"
 
-# Prediction
+# Prediction pipeline
 if predict_clicked:
     with st.spinner("Running prediction..."):
         # Original model prediction
@@ -536,7 +560,8 @@ if predict_clicked:
         
         # GAM metamodel prediction based on original model's output
         final_pred = gam_model.predict(xgb_pred.reshape(-1, 1))
-                # ÄHNLICHKEITSBERECHNUNG
+
+        # Variables for similar player transfer
         input_query = {
             #"height": height,
             "mainPosition": main_position,
@@ -559,12 +584,12 @@ if predict_clicked:
 
         }
 
-        # === ÄHNLICHE SPIELER FINDEN ===
+        # Function for finding similar transfers
         def find_similar_players(input_data, df, top_n=3):
             features = list(input_data.keys())
             id_cols = ['playerId', 'playerName', 'mainPosition', "percentage_played", 'season']
 
-            # doppelte Spaltennamen vermeiden
+            # dont use duplicates
             all_cols = list(dict.fromkeys(features + id_cols))
 
             df_subset = df[all_cols].dropna().copy()
@@ -575,6 +600,7 @@ if predict_clicked:
                 if col in input_data:
                     input_data[col] = str(input_data[col])
 
+            # similar transfer should be same competition level
             df_subset = df_subset[
              (df_subset['mainPosition'] == input_data['mainPosition']) &
              (df_subset['from_competition_competition_level'] == input_data['from_competition_competition_level']) &
@@ -597,7 +623,7 @@ if predict_clicked:
 
         similar_players = find_similar_players(input_query, reference_df)
 
-
+        # Interpretion of prediction
         if final_pred < 20:
             msg, color = "Not expected to play", "#FF4B4B"
         elif final_pred < 40:
@@ -609,9 +635,11 @@ if predict_clicked:
         else: 
             msg, color = "Next Starplayer", "#015801"
 
-        rgba_bg = hex_to_rgba(color, alpha=0.6)  # 0.6 ist die Transparenz
+        rgba_bg = hex_to_rgba(color, alpha=0.6)  # 0.6 of transparency
 
         with col_m:
+
+            # Display result card
             st.markdown(f"""
             <div style='
                 background-color: {rgba_bg};
@@ -628,17 +656,18 @@ if predict_clicked:
                 </span>
             </div>
             """, unsafe_allow_html=True)
+
+            #show similar players
             st.markdown("### 👥 Top 3 Similar Transfers")
             for _, row in similar_players.iterrows():
                 st.markdown(f"- **{row['playerName']}** | Position: {row['mainPosition']} | Season: {row['season']} | Playing %: {row['percentage_played']}%")
 
-        
+# Debug option to show input vector
 if st.checkbox("Show feature vector"):
     st.write({k: v for k, v in data.items() if v != 0})
 
 
 # === Feature Importances ===
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -646,7 +675,7 @@ with st.expander("📈 Show Feature Importances"):
     st.image("Feature_Importances_SHAP.png", caption="Top Feature Importances", use_container_width=True)
 
 
-# === Footer Section ===
+# === Footer Section with credits ===
 st.markdown("""
     <div style='text-align: center; margin-top: 2rem; color: #f9f9f9; font-size: 0.8rem;'>
         © 2025 Next11 in Cooperation with 1. FC Köln and University of Cologne – All rights reserved.
